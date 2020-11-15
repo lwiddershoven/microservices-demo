@@ -1,0 +1,113 @@
+version: "2.4"
+services:
+  emailservice:
+    build: src/emailservice
+    env_file: docker-compose-env/disable_gcp.env
+    expose:
+    - 5000
+    environment:
+      PORT: 5000
+  productcatalogservice:
+    build: src/productcatalogservice
+    env_file: docker-compose-env/disable_gcp.env
+    expose:
+      - 3550
+    environment:
+      PORT: 3550
+  recommendationservice:
+    build: src/recommendationservice
+    env_file: docker-compose-env/disable_gcp.env
+    expose:
+      - 8081
+    environment:
+      PORT: 8081
+      PRODUCT_CATALOG_SERVICE_ADDR: productcatalogservice:3550
+  shippingservice:
+    build: src/shippingservice
+    env_file: docker-compose-env/disable_gcp.env
+    expose:
+      - 50051
+    environment:
+      PORT: 50051
+  checkoutservice:
+    build: src/checkoutservice
+    depends_on:
+      - productcatalogservice
+      - shippingservice
+      - paymentservice
+      - emailservice
+      - currencyservice
+      - cartservice
+    env_file: docker-compose-env/disable_gcp.env
+    environment:
+      PRODUCT_CATALOG_SERVICE_ADDR: "productcatalogservice:3550"
+      SHIPPING_SERVICE_ADDR: "shippingservice:50051"
+      PAYMENT_SERVICE_ADDR: "paymentservice:50051"
+      EMAIL_SERVICE_ADDR: "emailservice:5000"
+      CURRENCY_SERVICE_ADDR: "currencyservice:7000"
+      CART_SERVICE_ADDR: "cartservice:7070"
+  paymentservice:
+    build: src/paymentservice
+    env_file: docker-compose-env/disable_gcp.env
+  currencyservice:
+    build: src/currencyservice
+    env_file: docker-compose-env/disable_gcp.env
+    expose:
+      - 7000
+    environment:
+      PORT: 7000
+  redis-cart:
+    image: "redis:alpine"
+    expose:
+      - 6379
+  cartservice:
+    build: src/cartservice
+    depends_on:
+      - redis-cart
+    env_file:
+    - docker-compose-env/disable_gcp.env
+    expose:
+        - 7070
+    environment:
+      PORT: 7070
+      CURRENCY_SERVICE_ADDR: currencyservice:7000
+      REDIS_ADDR: "redis-cart:6379"
+      LISTEN_ADDR: "0.0.0.0"
+  frontend:
+    build: src/frontend
+    expose:
+      - 8080
+    environment:
+      PORT: 8080
+      PRODUCT_CATALOG_SERVICE_ADDR: productcatalogservice:3550
+      CURRENCY_SERVICE_ADDR: currencyservice:7000
+      CART_SERVICE_ADDR: "cartservice:7070"
+      RECOMMENDATION_SERVICE_ADDR: "recommendationservice:8081"
+      SHIPPING_SERVICE_ADDR: "shippingservice:50051"
+      CHECKOUT_SERVICE_ADDR: "checkoutservice:5050"
+      AD_SERVICE_ADDR: "adservice:9555"
+    depends_on:
+      - productcatalogservice
+      - currencyservice
+      - cartservice
+      - recommendationservice
+      - shippingservice
+      - checkoutservice
+      - adservice
+    env_file: docker-compose-env/disable_gcp.env
+    ports:
+    - "8080:8080"
+#  loadgenerator:
+#    build: src/loadgenerator
+#    depends_on:
+#      - frontend
+#    env_file: docker-compose-env/disable_gcp.env
+#    environment:
+#      FRONTEND_ADDR: frontend:8080
+  adservice:
+    build: src/adservice
+    env_file: docker-compose-env/disable_gcp.env
+    expose:
+      - 9555
+    environment:
+      PORT: 9555

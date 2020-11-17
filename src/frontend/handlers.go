@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+    "io/ioutil"// 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -65,6 +66,19 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+    resp, err := http.Get("https://helloworld-nodejs-upgpb2rfmq-uc.a.run.app/")
+    if err != nil {
+        renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve hello"), http.StatusInternalServerError)
+        return
+    }
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve hello body"), http.StatusInternalServerError)
+        return
+    }
+    log.Info("Body value " + string(body))
+
 	type productView struct {
 		Item  *pb.Product
 		Price *pb.Money
@@ -96,6 +110,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		"ad":            fe.chooseAd(r.Context(), []string{}, log),
 		"platform_css":  plat.css,
 		"platform_name": plat.provider,
+		"cloud_run_message": cloud_run_message,
 	}); err != nil {
 		log.Error(err)
 	}
@@ -111,9 +126,12 @@ func (plat *platformDetails) setPlatformDetails(env string) {
 	} else if env == "azure" {
 		plat.provider = "Azure"
 		plat.css = "azure-platform"
-	} else {
+	} else if env == "gcp" {
 		plat.provider = "Google Cloud"
 		plat.css = "gcp-platform"
+	} else {
+	    plat.provider = ""
+	    plat.css = ""
 	}
 }
 

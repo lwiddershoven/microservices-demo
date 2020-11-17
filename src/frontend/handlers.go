@@ -78,7 +78,7 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
     cloud_run_message = string(body)
-    log.Info("Body value " + cloud_run_message
+    log.Info("Body value " + cloud_run_message)
 
 	type productView struct {
 		Item  *pb.Product

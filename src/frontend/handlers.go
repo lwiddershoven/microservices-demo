@@ -77,7 +77,8 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
         renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve hello body"), http.StatusInternalServerError)
         return
     }
-    log.Info("Body value " + string(body))
+    cloud_run_message = string(body)
+    log.Info("Body value " + cloud_run_message
 
 	type productView struct {
 		Item  *pb.Product

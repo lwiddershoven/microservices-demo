@@ -66,19 +66,26 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    resp, err := http.Get("https://helloworld-nodejs-upgpb2rfmq-uc.a.run.app/")
-    if err != nil {
-        renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve hello"), http.StatusInternalServerError)
-        return
+    cloud_run_message := "(Unknown)"
+    keys, ok := r.URL.Query()["hello"]
+    if !ok || len(keys[0]) < 1 {
+        log.Println("Url Param 'hello' is missing")
+    } else {
+        resp, err := http.Get("https://helloworld-nodejs-upgpb2rfmq-uc.a.run.app/")
+        if err != nil {
+            renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve hello"), http.StatusInternalServerError)
+            return
+        }
+        defer resp.Body.Close()
+        body, err := ioutil.ReadAll(resp.Body)
+        if err != nil {
+            renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve hello body"), http.StatusInternalServerError)
+            return
+        }
+        cloud_run_message = string(body)
     }
-    defer resp.Body.Close()
-    body, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        renderHTTPError(log, r, w, errors.Wrap(err, "could not retrieve hello body"), http.StatusInternalServerError)
-        return
-    }
-    cloud_run_message := string(body)
     log.Info("Body value " + cloud_run_message)
+
 
 	type productView struct {
 		Item  *pb.Product

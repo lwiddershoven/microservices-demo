@@ -1,0 +1,37 @@
+kubectl config use-context gcp
+kubectl config use-context minikube
+
+kubectl apply -f kubernetes-manifests-ignored/frontend-scaled.yaml
+
+Kubectl get deployments  # deployments - gewenste toestand per service
+kubectl get pods         # "Machines" die draaien - instances
+
+kubectl get service frontend-external
+minikube service frontend-external --url
+
+
+skaffold run --kube-context=minikube -f skaffold-fe.yaml
+skaffold run --default-repo=gcr.io/microservice-demo-295419 --kube-context=gcp -f skaffold-fe.yaml
+
+glcoud auth login
+
+0.
+docker ps
+
+1.
+kubectl config use-context gcp ; kubectl get deployments
+
+# List the deployments
+2.kubectl describe deployment frontend
+
+# List the "machines"
+3. kubectl get pods
+
+# YES you can view the logs
+4. kubectl logs paymentservice-65cb66884d-8fh6c
+
+# YES you can access the running application container
+5. kubectl exec --stdin --tty PODNAME -- /bin/sh
+  ( kubectl exec --stdin --tty paymentservice-65cb66884d-8fh6c  -- /bin/sh )
+
+--
